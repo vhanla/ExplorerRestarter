@@ -1,9 +1,9 @@
 object Form1: TForm1
   Left = 0
   Top = 0
-  BorderIcons = [biSystemMenu, biMinimize]
+  BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
-  Caption = 'Restart Explorer'
+  Caption = 'Restart Explorer v1.0.9'
   ClientHeight = 269
   ClientWidth = 488
   Color = clBtnFace
@@ -75,9 +75,13 @@ object Form1: TForm1
     Top = 24
     Width = 200
     Height = 19
+    Hint = 'Press ESC to clear, then save changes'
     HotKey = 57457
     Modifiers = [hkShift, hkCtrl, hkAlt]
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 4
+    OnChange = HotKey1Change
   end
   object btnSetHotkey: TButton
     Left = 184
@@ -98,6 +102,10 @@ object Form1: TForm1
   object PopupMenu1: TPopupMenu
     Left = 424
     Top = 160
+    object Settings1: TMenuItem
+      Caption = '&Settings'
+      OnClick = Settings1Click
+    end
     object Restart1: TMenuItem
       Caption = 'Restart'
       OnClick = Restart1Click

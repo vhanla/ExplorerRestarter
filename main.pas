@@ -24,6 +24,7 @@ type
     lblCredits: TLabel;
     HotKey1: THotKey;
     btnSetHotkey: TButton;
+    Settings1: TMenuItem;
     procedure Exit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -37,10 +38,13 @@ type
     procedure ListBox1DblClick(Sender: TObject);
     procedure btnSetHotkeyClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure HotKey1Change(Sender: TObject);
+    procedure Settings1Click(Sender: TObject);
   private
     { Private declarations }
     HotKeyID: Integer;
     HotKeyIDFunction: Integer;
+    HotKeyStr: String;
     isPrompt: Boolean;
     procedure WMHotKey(var Msg: TWMHotKey); message WM_HOTKEY;
   public
@@ -112,6 +116,7 @@ begin
     ini := TIniFile.Create(ExtractFilePath(ParamStr(0))+'config.ini');
     try
       ini.WriteString('Settings', 'Hotkey', ShortCutToText(HotKey1.HotKey));
+      HotKeyStr := ShortCutToText(HotKey1.HotKey);
     finally
       ini.Free;
     end;
@@ -238,7 +243,8 @@ begin
   isPrompt := False;
   ini := TIniFile.Create(ExtractFilePath(ParamStr(0))+'config.ini');
   try
-    HotKey1.HotKey := TextToShortCut(ini.ReadString('Settings', 'Hotkey', ''));
+    HotKeyStr := ini.ReadString('Settings', 'Hotkey', '');
+    HotKey1.HotKey := TextToShortCut(HotKeyStr);
     btnSetHotkeyClick(Sender);
   finally
     ini.Free;
@@ -248,6 +254,14 @@ end;
 procedure TForm1.FormShow(Sender: TObject);
 begin
   ShowWindow(Application.Handle, SW_HIDE)
+end;
+
+procedure TForm1.HotKey1Change(Sender: TObject);
+begin
+  if HotKey1.HotKey = TextToShortCut('') then
+    btnSetHotkey.Caption := 'Save'
+  else
+    btnSetHotkey.Caption := 'Set Hotkey';
 end;
 
 procedure TForm1.ListBox1DblClick(Sender: TObject);
@@ -265,6 +279,11 @@ begin
   btnListExplorersClick(Sender);
   btnKillClick(Sender);
   tmrRestorer.Enabled := True;
+end;
+
+procedure TForm1.Settings1Click(Sender: TObject);
+begin
+  Show;
 end;
 
 procedure TForm1.Timer1Timer(Sender: TObject);
@@ -295,6 +314,12 @@ var
 begin
   if Msg.HotKey = GlobalFindAtom('REXHOTKEY') then
   begin
+    if Visible and HotKey1.Focused then
+    begin
+      HotKey1.HotKey := TextToShortCut(HotKeyStr);
+      Exit;
+    end;
+
     if not isPrompt then
     begin
       isPrompt := True;
