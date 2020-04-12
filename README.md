@@ -1,5 +1,6 @@
 Explorer Restarter
 ------------------
+![snap01](https://raw.githubusercontent.com/vhanla/ExplorerRestarter/master/.gitassets/snap01.png)
 
 This simple tool will help you restart Windows File Explorer (explorer.exe), specially useful when
 programming addons, plugins that depends on Explorer.exe, like taskbands, shell extensions, etc.
