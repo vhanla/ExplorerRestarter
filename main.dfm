@@ -1,29 +1,41 @@
 object Form1: TForm1
   Left = 0
   Top = 0
+  BorderIcons = [biSystemMenu, biMinimize]
+  BorderStyle = bsSingle
   Caption = 'Restart Explorer'
-  ClientHeight = 240
-  ClientWidth = 484
+  ClientHeight = 269
+  ClientWidth = 488
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  FormStyle = fsStayOnTop
   OldCreateOrder = False
+  Position = poScreenCenter
   OnCloseQuery = FormCloseQuery
+  OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
-    Left = 32
+    Left = 8
     Top = 24
     Width = 47
     Height = 13
     Caption = 'Explorer: '
   end
+  object lblCredits: TLabel
+    Left = 8
+    Top = 248
+    Width = 291
+    Height = 13
+    Caption = 'Author: vhanla https://github.com/vhanla/ExplorerRestarter'
+  end
   object btnStart: TButton
-    Left = 120
+    Left = 89
     Top = 58
     Width = 89
     Height = 25
@@ -32,7 +44,7 @@ object Form1: TForm1
     OnClick = btnStartClick
   end
   object btnKill: TButton
-    Left = 32
+    Left = 8
     Top = 58
     Width = 75
     Height = 25
@@ -41,22 +53,40 @@ object Form1: TForm1
     OnClick = btnKillClick
   end
   object ListBox1: TListBox
-    Left = 32
+    Left = 8
     Top = 89
-    Width = 417
-    Height = 143
+    Width = 472
+    Height = 153
     ItemHeight = 13
     TabOrder = 2
     OnDblClick = ListBox1DblClick
   end
   object btnListExplorers: TButton
-    Left = 215
+    Left = 184
     Top = 58
     Width = 82
     Height = 25
     Caption = 'List Explorers'
     TabOrder = 3
     OnClick = btnListExplorersClick
+  end
+  object HotKey1: THotKey
+    Left = 280
+    Top = 24
+    Width = 200
+    Height = 19
+    HotKey = 57457
+    Modifiers = [hkShift, hkCtrl, hkAlt]
+    TabOrder = 4
+  end
+  object btnSetHotkey: TButton
+    Left = 184
+    Top = 19
+    Width = 82
+    Height = 25
+    Caption = 'Set Hotkey'
+    TabOrder = 5
+    OnClick = btnSetHotkeyClick
   end
   object TrayIcon1: TTrayIcon
     PopupMenu = PopupMenu1
@@ -90,9 +120,5 @@ object Form1: TForm1
     OnTimer = tmrRestorerTimer
     Left = 264
     Top = 128
-  end
-  object tmrListExplorers: TTimer
-    Left = 304
-    Top = 24
   end
 end

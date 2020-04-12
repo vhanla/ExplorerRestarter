@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Menus,
-  Vcl.StdCtrls, TlHelp32, ShellApi, ShDocVw, ActiveX, ShlObj;
+  Vcl.StdCtrls, TlHelp32, ShellApi, ShDocVw, ActiveX, ShlObj, Vcl.ComCtrls, IniFiles;
 
 type
   TForm1 = class(TForm)
@@ -20,8 +20,10 @@ type
     btnKill: TButton;
     tmrRestorer: TTimer;
     ListBox1: TListBox;
-    tmrListExplorers: TTimer;
     btnListExplorers: TButton;
+    lblCredits: TLabel;
+    HotKey1: THotKey;
+    btnSetHotkey: TButton;
     procedure Exit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -33,8 +35,14 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure btnListExplorersClick(Sender: TObject);
     procedure ListBox1DblClick(Sender: TObject);
+    procedure btnSetHotkeyClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
+    HotKeyID: Integer;
+    HotKeyIDFunction: Integer;
+    isPrompt: Boolean;
+    procedure WMHotKey(var Msg: TWMHotKey); message WM_HOTKEY;
   public
     { Public declarations }
   end;
@@ -69,6 +77,46 @@ begin
     NextProc := Process32Next(SnapProcHandle, ProcEntry);
   end;
   CloseHandle(SnapProcHandle);
+end;
+
+procedure TForm1.btnSetHotkeyClick(Sender: TObject);
+var
+  key: WORD;
+  modifier: Integer;
+  ini: TIniFile;
+begin
+  key := HotKey1.HotKey and not (scShift + scCtrl + scAlt); // HotKey1.HotKey and $000000FF;
+  modifier := 0;
+  if HotKey1.HotKey and scShift <> 0 then
+    modifier := MOD_SHIFT;
+  if HotKey1.HotKey and scAlt <> 0 then
+    modifier := modifier + MOD_ALT;
+  if HotKey1.HotKey and scCtrl <> 0 then
+    modifier := modifier + MOD_CONTROL;
+
+  // Re-register hotkey
+  if GlobalFindAtom('REXHOTKEY') <> 0 then
+  begin
+    UnRegisterHotkey(Handle, GlobalFindAtom('REXHOTKEY'));
+    GlobalDeleteAtom(GlobalFindAtom('REXHOTKEY'));
+  end;
+
+  if not RegisterHotKey(Handle, GlobalAddAtom('REXHOTKEY'), modifier, key) then
+  begin
+    MessageDlg(ShortCutToText(HotKey1.HotKey) + ' failed to register, try another hotkey.', mtError, [mbOK], 0);
+  end
+  else
+  begin
+    if Sender is TButton then
+      MessageDlg(ShortCutToText(HotKey1.HotKey) + ' successfully registered.', mtInformation, [mbOK], 0);
+    ini := TIniFile.Create(ExtractFilePath(ParamStr(0))+'config.ini');
+    try
+      ini.WriteString('Settings', 'Hotkey', ShortCutToText(HotKey1.HotKey));
+    finally
+      ini.Free;
+    end;
+  end;
+
 end;
 
 procedure TForm1.btnStartClick(Sender: TObject);
@@ -168,6 +216,7 @@ end;
 
 procedure TForm1.btnKillClick(Sender: TObject);
 begin
+  btnListExplorersClick(Sender);
   WinExec(PAnsiChar('taskkill /f /im explorer.exe'), SW_HIDE);
 end;
 
@@ -180,6 +229,20 @@ procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := False;
   Hide;
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+var
+  ini: TIniFile;
+begin
+  isPrompt := False;
+  ini := TIniFile.Create(ExtractFilePath(ParamStr(0))+'config.ini');
+  try
+    HotKey1.HotKey := TextToShortCut(ini.ReadString('Settings', 'Hotkey', ''));
+    btnSetHotkeyClick(Sender);
+  finally
+    ini.Free;
+  end;
 end;
 
 procedure TForm1.FormShow(Sender: TObject);
@@ -222,7 +285,39 @@ end;
 
 procedure TForm1.TrayIcon1DblClick(Sender: TObject);
 begin
-  Show;
+  Visible := not Visible;
+end;
+
+procedure TForm1.WMHotKey(var Msg: TWMHotKey);
+var
+  fmsg: String;
+  I: Integer;
+begin
+  if Msg.HotKey = GlobalFindAtom('REXHOTKEY') then
+  begin
+    if not isPrompt then
+    begin
+      isPrompt := True;
+      fmsg := '';
+      btnListExplorersClick(Self);
+      if ListBox1.Items.Count > 0 then
+      begin
+        fmsg := 'There are directories currently opened by Explorer:'+#13#10#13#10;
+        for I := 0 to ListBox1.Items.Count - 1 do
+          fmsg := fmsg + ListBox1.Items[I]+#13#10;
+        fmsg := fmsg+#13#10;
+      end;
+
+      if MessageDlg(fmsg+'Restart Explorer will restore them too.'#13#10'Restart Explorer.exe?', mtConfirmation, mbYesNo, 0) = mrYes then
+      begin
+        //ShowMessage('Restarting...');
+        Restart1Click(Self);
+      end;
+      isPrompt := False;
+    end;
+
+  end;
+
 end;
 
 end.
