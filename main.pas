@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Menus,
-  Vcl.StdCtrls, TlHelp32, ShellApi;
+  Vcl.StdCtrls, TlHelp32, ShellApi, ShDocVw, ActiveX, ShlObj;
 
 type
   TForm1 = class(TForm)
@@ -20,6 +20,8 @@ type
     btnKill: TButton;
     tmrRestorer: TTimer;
     ListBox1: TListBox;
+    tmrListExplorers: TTimer;
+    Button1: TButton;
     procedure Exit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -29,6 +31,7 @@ type
     procedure tmrRestorerTimer(Sender: TObject);
     procedure TrayIcon1DblClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -71,6 +74,78 @@ procedure TForm1.btnStartClick(Sender: TObject);
 begin
   ShellExecute(0, PCHAR('OPEN') ,PChar('C:\Windows\explorer.exe'), nil, nil, SW_NORMAL);
 //  WinExec('explorer', SW_NORMAL);
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+const
+  IID_IServiceProvider: TGUID = '{6D5140C1-7436-11CE-8034-00AA006009FA}';
+  SID_STopLevelBrowser: TGUID = '{4C96BE40-915C-11CF-99D3-00AA004AE837}';
+var
+  ShellWindows: IShellWindows;
+  I: Integer;
+  ShellBrowser: IShellBrowser;
+  WndIface: IDispatch;
+  WebBrowserApp: IWebBrowserApp;
+  ServiceProvider: IServiceProvider;
+  ItemIDList: PItemIDList;
+  bar: HWND;
+  ShellView: IShellView;
+  FolderView: IFolderView;
+  PersistFolder2: IPersistFolder2;
+  ShellFolder: IShellFolder;
+  focus: Integer;
+  ret: _STRRET;
+begin
+  ListBox1.Items.BeginUpdate;
+  ListBox1.Items.Clear;
+  if Succeeded(CoCreateInstance(CLASS_ShellWindows, nil, CLSCTX_LOCAL_SERVER,
+    IID_IShellWindows, ShellWindows)) then
+  begin
+    for I := 0 to ShellWindows.Count - 1 do
+    begin
+      if VarType(ShellWindows.Item(I)) = varDispatch then
+      begin
+      WndIface := ShellWindows.Item(VarAsType(I, VT_I4));
+
+        try
+        if Succeeded(WndIface.QueryInterface(IID_IWebBrowserApp, WebBrowserApp)) then
+        begin
+          begin
+            if Succeeded(WebBrowserApp.QueryInterface(IID_IServiceProvider,
+              ServiceProvider)) then
+            begin
+              if Succeeded(ServiceProvider.QueryService(SID_STopLevelBrowser,
+                IID_IShellBrowser, ShellBrowser)) then
+              begin
+                if Succeeded(ShellBrowser.QueryActiveShellView(ShellView)) then
+                begin
+                  if Succeeded(ShellView.QueryInterface(IID_IFolderView, FolderView)) then
+                  begin
+                    FolderView.GetFocusedItem(focus);
+                    FolderView.Item(focus,ItemIDList);
+                    if Succeeded(FolderView.GetFolder(IID_IPersistFolder2, PersistFolder2)) then
+                    begin
+                      if Succeeded(PersistFolder2.QueryInterface(IID_IShellFolder, ShellFolder)) then
+                      begin
+                        ShellFolder.GetDisplayNameOf(ItemIDList, SHGDN_FORPARSING, ret);
+                        ListBox1.Items.Add(ret.pOleStr);
+                      end;
+                    end;
+                  end;
+                end;
+
+              end;
+
+            end;
+          end;
+        end;
+        except
+        end;
+      end;
+
+    end;
+  end;
+  ListBox1.Items.EndUpdate;
 end;
 
 procedure TForm1.btnKillClick(Sender: TObject);

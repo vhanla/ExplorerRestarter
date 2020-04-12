@@ -48,6 +48,15 @@ object Form1: TForm1
     ItemHeight = 13
     TabOrder = 2
   end
+  object Button1: TButton
+    Left = 215
+    Top = 58
+    Width = 82
+    Height = 25
+    Caption = 'List Explorers'
+    TabOrder = 3
+    OnClick = Button1Click
+  end
   object TrayIcon1: TTrayIcon
     PopupMenu = PopupMenu1
     Visible = True
@@ -80,5 +89,9 @@ object Form1: TForm1
     OnTimer = tmrRestorerTimer
     Left = 264
     Top = 128
+  end
+  object tmrListExplorers: TTimer
+    Left = 304
+    Top = 24
   end
 end
