@@ -32,6 +32,7 @@ type
     procedure TrayIcon1DblClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure Button1Click(Sender: TObject);
+    procedure ListBox1DblClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -95,6 +96,8 @@ var
   ShellFolder: IShellFolder;
   focus: Integer;
   ret: _STRRET;
+  folderPath: PChar;
+  AMalloc: IMalloc;
 begin
   ListBox1.Items.BeginUpdate;
   ListBox1.Items.Clear;
@@ -125,10 +128,17 @@ begin
                     FolderView.Item(focus,ItemIDList);
                     if Succeeded(FolderView.GetFolder(IID_IPersistFolder2, PersistFolder2)) then
                     begin
-                      if Succeeded(PersistFolder2.QueryInterface(IID_IShellFolder, ShellFolder)) then
+                      if succeeded(PersistFolder2.GetCurFolder(ItemIDList)) then
+                      //if Succeeded(PersistFolder2.QueryInterface(IID_IShellFolder, ShellFolder)) then
                       begin
-                        ShellFolder.GetDisplayNameOf(ItemIDList, SHGDN_FORPARSING, ret);
-                        ListBox1.Items.Add(ret.pOleStr);
+                        //ShellFolder.GetDisplayNameOf(ItemIDList, SHGDN_FORPARSING, ret);
+                        //ListBox1.Items.Add(ret.pOleStr);
+                        folderPath := StrAlloc(MAX_PATH);
+                        if SHGetPathFromIDList(ItemIDList, folderPath) then
+                          ListBox1.Items.Add(folderPath);
+                        SHGetMalloc(AMalloc);
+                        AMalloc.Free(ItemIDList);
+                        StrDispose(folderPath);
                       end;
                     end;
                   end;
@@ -167,6 +177,16 @@ end;
 procedure TForm1.FormShow(Sender: TObject);
 begin
   ShowWindow(Application.Handle, SW_HIDE)
+end;
+
+procedure TForm1.ListBox1DblClick(Sender: TObject);
+begin
+  if (ListBox1.Items.Count > 0) and (ListBox1.ItemIndex >=0) and (ListBox1.ItemIndex < ListBox1.Items.Count) then
+  begin
+    if DirectoryExists(ListBox1.Items[ListBox1.ItemIndex]) then
+      ShellExecute(0, 'OPEN',PChar(ListBox1.Items[ListBox1.ItemIndex]),nil,nil,SW_SHOWNORMAL );
+  end;
+
 end;
 
 procedure TForm1.Restart1Click(Sender: TObject);
