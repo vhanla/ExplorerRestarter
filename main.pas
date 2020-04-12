@@ -21,7 +21,7 @@ type
     tmrRestorer: TTimer;
     ListBox1: TListBox;
     tmrListExplorers: TTimer;
-    Button1: TButton;
+    btnListExplorers: TButton;
     procedure Exit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
@@ -31,7 +31,7 @@ type
     procedure tmrRestorerTimer(Sender: TObject);
     procedure TrayIcon1DblClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure Button1Click(Sender: TObject);
+    procedure btnListExplorersClick(Sender: TObject);
     procedure ListBox1DblClick(Sender: TObject);
   private
     { Private declarations }
@@ -72,12 +72,20 @@ begin
 end;
 
 procedure TForm1.btnStartClick(Sender: TObject);
+var
+  I: Integer;
 begin
   ShellExecute(0, PCHAR('OPEN') ,PChar('C:\Windows\explorer.exe'), nil, nil, SW_NORMAL);
 //  WinExec('explorer', SW_NORMAL);
+  // Let's open previously listed explorer paths
+  for I := 0 to ListBox1.Count - 1 do
+  begin
+    if DirectoryExists(ListBox1.Items[I]) then
+      ShellExecute(0, 'OPEN',PChar(ListBox1.Items[I]),nil,nil,SW_SHOWNORMAL );
+  end;
 end;
 
-procedure TForm1.Button1Click(Sender: TObject);
+procedure TForm1.btnListExplorersClick(Sender: TObject);
 const
   IID_IServiceProvider: TGUID = '{6D5140C1-7436-11CE-8034-00AA006009FA}';
   SID_STopLevelBrowser: TGUID = '{4C96BE40-915C-11CF-99D3-00AA004AE837}';
@@ -191,6 +199,7 @@ end;
 
 procedure TForm1.Restart1Click(Sender: TObject);
 begin
+  btnListExplorersClick(Sender);
   btnKillClick(Sender);
   tmrRestorer.Enabled := True;
 end;

@@ -49,14 +49,14 @@ object Form1: TForm1
     TabOrder = 2
     OnDblClick = ListBox1DblClick
   end
-  object Button1: TButton
+  object btnListExplorers: TButton
     Left = 215
     Top = 58
     Width = 82
     Height = 25
     Caption = 'List Explorers'
     TabOrder = 3
-    OnClick = Button1Click
+    OnClick = btnListExplorersClick
   end
   object TrayIcon1: TTrayIcon
     PopupMenu = PopupMenu1
