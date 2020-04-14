@@ -223,6 +223,7 @@ procedure TForm1.btnKillClick(Sender: TObject);
 begin
   btnListExplorersClick(Sender);
   WinExec(PAnsiChar('taskkill /f /im explorer.exe'), SW_HIDE);
+  WinExec(PAnsiChar('taskkill /f /im prevhost.exe'), SW_HIDE);
 end;
 
 procedure TForm1.Exit1Click(Sender: TObject);
